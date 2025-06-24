@@ -1,6 +1,6 @@
 # In tools/financial_tools.py
 import yfinance as yf
-from crewai_tools import BaseTool
+from langchain_core.tools import BaseTool
 
 class YFinanceTool(BaseTool):
     name: str = "Yahoo Finance Tool"

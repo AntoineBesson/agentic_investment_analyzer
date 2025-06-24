@@ -1,7 +1,7 @@
 # In tools/scraping_tools.py
 import requests
 from bs4 import BeautifulSoup
-from crewai_tools import BaseTool
+from langchain_core.tools import BaseTool
 
 class ScrapeWebsiteTool(BaseTool):
     name: str = "Scrape Website Tool"

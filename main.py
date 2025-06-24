@@ -3,11 +3,21 @@ import os
 from dotenv import load_dotenv
 from crewai import Agent, Task, Crew, Process
 
+# --- CHANGE: Import Groq ---
+from langchain_groq import ChatGroq
+
 # Load environment variables from .env file
 load_dotenv()
 
+# --- CHANGE: Instantiate Groq LLM ---
+# This will be the LLM for all our agents
+groq_llm = ChatGroq(
+    model_name="llama3-8b-8192"
+)
+
+
 # --- TOOL DEFINITIONS ---
-# You can keep your tool imports as they were
+# Tool imports remain the same
 from crewai_tools import TavilySearchResults
 from tools.financial_tools import YFinanceTool
 from tools.scraping_tools import ScrapeWebsiteTool
@@ -26,7 +36,8 @@ researcher = Agent(
   You are adept at using search tools to find official websites, press releases, and any relevant news.""",
   verbose=True,
   allow_delegation=False,
-  tools=[search_tool, scrape_tool]
+  tools=[search_tool, scrape_tool],
+  llm=groq_llm # --- CHANGE: Assign Groq LLM ---
 )
 
 # Agent 2: Financial Analyst (Specialist)
@@ -37,7 +48,8 @@ financial_analyst = Agent(
   You provide a clear quantitative picture of a company's financial health.""",
   verbose=True,
   allow_delegation=False,
-  tools=[yfinance_tool]
+  tools=[yfinance_tool],
+  llm=groq_llm # --- CHANGE: Assign Groq LLM ---
 )
 
 # Agent 3: Investment Advisor (Manager)
@@ -48,14 +60,13 @@ investment_advisor = Agent(
   You are responsible for the final quality of the investment report, ensuring all data is accurate, relevant, and well-synthesized. 
   You delegate tasks to your team of analysts and review their work critically.""",
   verbose=True,
-  allow_delegation=True # IMPORTANT: The manager MUST be allowed to delegate.
+  allow_delegation=True,
+  llm=groq_llm # --- CHANGE: Assign Groq LLM to the manager ---
 )
 
 
 # --- TASK DEFINITION ---
-
-# We only need one high-level task for the manager agent.
-# The manager will break this down into sub-tasks for the other agents.
+# Task definition remains the same
 investment_analysis_task = Task(
   description="""Conduct a comprehensive investment analysis for the company '{company}'. 
   Your final report should be structured with the following sections:
@@ -64,24 +75,23 @@ investment_analysis_task = Task(
   3.  **Qualitative & Market Analysis:** Summary of recent news and overall market sentiment.
   4.  **Final Synthesis & Recommendation:** A consolidated summary identifying key opportunities and risks, and a final investment outlook.""",
   expected_output="A meticulously formatted and detailed investment report.",
-  agent=investment_advisor # Assign the high-level task to the manager.
+  agent=investment_advisor
 )
 
 # --- CREW DEFINITION ---
 
-# Instantiate your crew with a hierarchical process
+# The Crew definition now implicitly uses the LLM defined in each agent.
+# We no longer need the manager_llm parameter here as it's set in the agent itself.
 investment_crew = Crew(
   agents=[researcher, financial_analyst, investment_advisor],
   tasks=[investment_analysis_task],
-  process=Process.hierarchical,
-  manager_llm=None  # We specify the manager LLM here. Defaults to the framework's default LLM if None.
-                    # For OpenAI, you can specify a specific model like ChatOpenAI(model_name="gpt-4")
+  process=Process.hierarchical
 )
 
 # --- EXECUTION ---
 if __name__ == "__main__":
-    print("## Welcome to the Agentic Investment Analyzer ##")
-    print("-----------------------------------------------")
+    print("## Welcome to the Agentic Investment Analyzer (Groq Edition) ##")
+    print("-----------------------------------------------------------------")
     company_name = input("Please enter the company name you want to analyze: ")
     
     result = investment_crew.kickoff(inputs={'company': company_name})

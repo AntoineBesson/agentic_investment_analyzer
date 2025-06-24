@@ -18,7 +18,7 @@ groq_llm = ChatGroq(
 
 # --- TOOL DEFINITIONS ---
 # Tool imports remain the same
-from crewai_tools import TavilySearchResults
+from langchain_community.tools import TavilySearchResults
 from tools.financial_tools import YFinanceTool
 from tools.scraping_tools import ScrapeWebsiteTool
 

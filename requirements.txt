@@ -1,0 +1,7 @@
+crewai
+crewai-tools
+python-dotenv
+beautifulsoup4
+requests
+yfinance
+openai
